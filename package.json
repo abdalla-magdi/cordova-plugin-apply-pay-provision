@@ -1,0 +1,40 @@
+{
+  "name": "cordova-plugin-apply-pay-provision",
+  "version": "1.0.0",
+  "description": "This plugin provide required functionality to provision your cards into iOS Wallet for Apple Pay in-app provisioning.",
+  "cordova": {
+    "id": "cordova-plugin-apply-pay-provision",
+    "platforms": [
+      "ios"
+    ]
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/abdalla-magdi/cordova-plugin-apply-pay-provision.git"
+  },
+  "keywords": [
+    "ApplePay",
+    "Apple Pay",
+    "InAppProvision",
+    "Card",
+    "Payment",
+    "ecosystem:cordova",
+    "cordova-ios"
+  ],
+  "engines": [
+    {
+      "name": "cordova",
+      "version": ">=3.0.0"
+    }
+  ],
+  "author": "Abdalla Soliman",
+  "license": "Apache-2.0",
+  "bugs": {
+    "url": "https://github.com/abdalla-magdi/cordova-plugin-apply-pay-provision/issues"
+  },
+  "homepage": "https://github.com/abdalla-magdi/cordova-plugin-apply-pay-provision#readme",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no tests specified\" && exit 1"
+  }
+}

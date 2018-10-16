@@ -1,0 +1,31 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<plugin xmlns="http://apache.org/cordova/ns/plugins/1.0"
+        id="cordova-plugin-apply-pay-provision"
+		version="1.0.0">
+    <name>Cordova Apple Pay In-app Provision</name>
+	  <author>Abdalla Magdi Soliman</author>
+    <description>This plugin provide required functionality to provision your cards into iOS Wallet for Apple Pay in-app provisioning.</description>
+    <license>Apache 2.0</license>
+    <keywords>cordova,apple,apple pay,plugin</keywords>
+    <engines>
+      <engine name="cordova" version=">=3.0.0"/>
+    </engines>
+
+    <repo>https://github.com/abdalla-magdi/cordova-plugin-apply-pay-provision.git</repo>
+    <issue>https://github.com/abdalla-magdi/cordova-plugin-apply-pay-provision/issues</issue>
+	  <js-module src="www/applepayProvision.js" name="ApplePayProvision">
+        <clobbers target="window.plugins.applepayProvision" />
+    </js-module>
+
+    <platform name="ios">
+        <config-file target="config.xml" parent="/*">
+            <feature name="ApplePayProvision">
+                <param name="ios-package" value="ApplePayProvision"/>
+            </feature>
+        </config-file>
+        <header-file src="src/ios/ApplePayProvision.h" />
+        <source-file src="src/ios/ApplePayProvision.m" />
+        <framework src="PassKit.framework" />
+    </platform>
+
+</plugin>
