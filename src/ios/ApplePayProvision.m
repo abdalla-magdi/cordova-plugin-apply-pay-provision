@@ -19,25 +19,41 @@
 // Plugin Method - checkCardEligibility
 - (void) checkCardEligibility:(CDVInvokedUrlCommand*)command {
     NSString * cardIdentifier = [command.arguments objectAtIndex:0];
-    Boolean cardExist = false;
+    Boolean cardEligible = true;
     
     PKPassLibrary *passLibrary = [[PKPassLibrary alloc] init];
     NSArray<PKPass *> *paymentPasses = [passLibrary passesOfType:PKPassTypePayment];
     for (PKPass *pass in paymentPasses) {
          PKPaymentPass * paymentPass = [pass paymentPass];
         if([paymentPass primaryAccountIdentifier] == cardIdentifier)
-            cardExist = true;
+            cardEligible = false;
     }
     
+    if (WCSession.isSupported) { // check if the device support to handle an Apple Watch
+        WCSession *session = [WCSession defaultSession];
+        [session setDelegate:self.appDelegate];
+        [session activateSession];
+        
+        if ([session isPaired]) { // Check if the iPhone is paired with the Apple Watch
+            paymentPasses = [passLibrary remotePaymentPasses];
+            for (PKPass *pass in paymentPasses) {
+                PKPaymentPass * paymentPass = [pass paymentPass];
+                if([paymentPass primaryAccountIdentifier] == cardIdentifier)
+                    cardEligible = false;
+            }
+        }
+    }
+
+    
     CDVPluginResult *pluginResult;
-    pluginResult = [CDVPluginResult resultWithStatus:CDVCommandStatus_OK messageAsBool:cardExist];
+    pluginResult = [CDVPluginResult resultWithStatus:CDVCommandStatus_OK messageAsBool:cardEligible];
     //pluginResult = [CDVPluginResult resultWithStatus:CDVCommandStatus_OK messageAsBool:[passLibrary canAddPaymentPassWithPrimaryAccountIdentifier:cardIdentifier]];
     [self.commandDelegate sendPluginResult:pluginResult callbackId:command.callbackId];
 }
 
 // Plugin Method - addCardToWallet
 - (void) addCardToWallet:(CDVInvokedUrlCommand*)command {
-    CDVPluginResult *pluginResult;
+    //CDVPluginResult *pluginResult;
     
     NSString * primaryAccountIdentifier = [command.arguments objectAtIndex:0];
     NSString * cardholderName = [command.arguments objectAtIndex:1];
