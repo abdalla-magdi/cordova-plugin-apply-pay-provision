@@ -53,7 +53,9 @@
 
 // Plugin Method - addCardToWallet
 - (void) addCardToWallet:(CDVInvokedUrlCommand*)command {
-    //CDVPluginResult *pluginResult;
+    
+    // cache call back id value till we get response from Apple with Cryptography Info
+    self.cachedCallbackId =  command.callbackId;
     
     NSString * primaryAccountIdentifier = [command.arguments objectAtIndex:0];
     NSString * cardholderName = [command.arguments objectAtIndex:1];
@@ -73,10 +75,6 @@
     paymentPassViewController = [paymentPassViewController initWithRequestConfiguration:addPaymentPassRequestConfiguration delegate:self];
     [self.viewController presentViewController:paymentPassViewController animated:true completion:nil];
     
-    // cache call back id value till we get response from Apple with Cryptography Info
-    self.cachedCallbackId =  command.callbackId;
-    //pluginResult = [CDVPluginResult resultWithStatus:CDVCommandStatus_OK messageAsBool:true];
-    //[self.commandDelegate sendPluginResult:pluginResult callbackId:command.callbackId];
 }
 
 // PKAddPaymentPassViewControllerDelegate implmentation
@@ -87,13 +85,14 @@
                    completionHandler:(void (^)(PKAddPaymentPassRequest *request))handler{
     
     // Call Backend service send to it certificates, nonce, nonceSignature
-    NSArray *cryptographyInfo = @[certificates, nonce, nonceSignature];
+    NSMutableArray *cryptographyInfo = [[NSMutableArray alloc] init];
+    [cryptographyInfo addObject:nonce];
+    [cryptographyInfo addObject:nonceSignature];
     
-    /*NSString *seperator = @",";
-    NSMutableData *completeData = [nonce mutableCopy];
-    [completeData appendData:[seperator dataUsingEncoding:NSUTF8StringEncoding]];
-    [completeData appendData:nonceSignature];
-    [completeData appendData:[seperator dataUsingEncoding:NSUTF8StringEncoding]];*/
+    for (NSData* certificate in certificates)
+    {
+        [cryptographyInfo addObject:certificate];
+    }
 
     self.addPaymentRequestCallback = handler;
     
@@ -107,15 +106,10 @@
 // Plugin Method - addCardToWallet
 - (void) sendPassRequestData:(CDVInvokedUrlCommand*)command {
     
-    NSData * encryptedPassData = [command.arguments objectAtIndex:0];
-    // NSData * encryptedPassData = [[command.arguments objectAtIndex:0] dataUsingEncoding:ns64];
     //NSData * encryptedPassData = [[NSData alloc] initWithBase64EncodedString:[command.arguments objectAtIndex:0] options:0];
-    
-    NSData * activationData = [command.arguments objectAtIndex:1];
-    //NSData * activationData = [[command.arguments objectAtIndex:1] dataUsingEncoding:NSUTF8StringEncoding];
-    
-    NSData * wrappedKey = [command.arguments objectAtIndex:2];
-    //NSData * wrappedKey = [[command.arguments objectAtIndex:2] dataUsingEncoding:NSUTF8StringEncoding];
+    NSData * encryptedPassData = [[command.arguments objectAtIndex:0] dataUsingEncoding:NSUTF8StringEncoding];
+    NSData * activationData = [[command.arguments objectAtIndex:1] dataUsingEncoding:NSUTF8StringEncoding];
+    NSData * wrappedKey = [[command.arguments objectAtIndex:2] dataUsingEncoding:NSUTF8StringEncoding];
     
     PKAddPaymentPassRequest * addPaymentPassRequest = [[PKAddPaymentPassRequest alloc] init];
     [addPaymentPassRequest setEncryptedPassData:encryptedPassData];
