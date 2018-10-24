@@ -14,6 +14,7 @@ typedef void (^ AddPaymentRequestCallbackType)(PKAddPaymentPassRequest *request)
 
 - (void) checkDeviceEligibility:(CDVInvokedUrlCommand*)command;
 - (void) checkCardEligibility:(CDVInvokedUrlCommand*)command;
+- (void) checkCardEligibilityBySuffix:(CDVInvokedUrlCommand*)command;
 - (void) addCardToWallet:(CDVInvokedUrlCommand*)command;
 - (void) sendPassRequestData:(CDVInvokedUrlCommand*)command;
 

@@ -18,6 +18,7 @@ This plugin provide required functionality to provision your cards into iOS Wall
 
 - checkDeviceEligibility
 - checkCardEligibility
+- checkCardEligibilityBySuffix
 - addCardToWallet
 - sendPassRequestData
 
@@ -76,12 +77,39 @@ ApplePayProvision.checkCardEligibility(primaryAccountIdentifier, isCardEligibleC
 - iOS
 
 -----------------------------------------------------
+#### checkCardEligibilityBySuffix(cardSuffix, callback)
+
+Check if your card already added to all of your connected iOS for ex: your iPhone or the Apple Watch connected to this iPhone.
+
+##### Parameters
+- __cardSuffix__ (String) The card number suffix ex: last 4 or 6 digits
+- __callback__ (Function) A callback method to receive the boolean result asynchronously from the native plugin
+
+##### Usage
+
+```javascript
+function isCardEligibleCallbackBySuffix(boolean) {
+if (boolean) {
+console.log("Card is Eligible for Apple Pay");
+} else {
+console.log("Card Already provisioned in Apply Pay or not supported");
+}
+}
+
+ApplePayProvision.checkCardEligibility(cardSuffix, isCardEligibleCallback, errorCallback);
+```
+
+##### Supported Platforms
+
+- iOS
+
+-----------------------------------------------------
 #### addCardToWallet(primaryAccountIdentifier, cardholderName, primaryAccountNumberSuffix, localizedDescription, paymentNetwork, callback)
 
 Send Request to device Wallet to add this card to Apple Pay payment system and get Cryptography Info form Apple, the callback for this function will be called when nonce and certificates retrived from Apple.
 
 ##### Parameters
-- __primaryAccountIdentifier__ (String) Your card unique identifier that used in card in-app provisioning
+- __primaryAccountIdentifier__ (String) Your card unique identifier that used in card in-app provisioning, can be sent as empty value if this info is not available
 - __cardholderName__ (String) The name of the person the card is issued to
 - __primaryAccountNumberSuffix__ (String) The last four or five digits of the PAN. Presented to the user with dots prepended to indicate that it is a suffix, This must not be the entire PAN
 - __localizedDescription__ (String) A short description of the card

@@ -20,13 +20,15 @@
 - (void) checkCardEligibility:(CDVInvokedUrlCommand*)command {
     NSString * cardIdentifier = [command.arguments objectAtIndex:0];
     Boolean cardEligible = true;
+    Boolean cardAddedtoPasses = false;
+    Boolean cardAddedtoRemotePasses = false;
     
     PKPassLibrary *passLibrary = [[PKPassLibrary alloc] init];
     NSArray<PKPass *> *paymentPasses = [passLibrary passesOfType:PKPassTypePayment];
     for (PKPass *pass in paymentPasses) {
          PKPaymentPass * paymentPass = [pass paymentPass];
         if([paymentPass primaryAccountIdentifier] == cardIdentifier)
-            cardEligible = false;
+            cardAddedtoPasses = true;
     }
     
     if (WCSession.isSupported) { // check if the device support to handle an Apple Watch
@@ -39,15 +41,61 @@
             for (PKPass *pass in paymentPasses) {
                 PKPaymentPass * paymentPass = [pass paymentPass];
                 if([paymentPass primaryAccountIdentifier] == cardIdentifier)
-                    cardEligible = false;
+                    cardAddedtoRemotePasses = true;
             }
         }
+        else
+            cardAddedtoRemotePasses = true;
     }
+    else
+        cardAddedtoRemotePasses = true;
 
+    cardEligible = !cardAddedtoPasses || !cardAddedtoRemotePasses;
     
     CDVPluginResult *pluginResult;
     pluginResult = [CDVPluginResult resultWithStatus:CDVCommandStatus_OK messageAsBool:cardEligible];
     //pluginResult = [CDVPluginResult resultWithStatus:CDVCommandStatus_OK messageAsBool:[passLibrary canAddPaymentPassWithPrimaryAccountIdentifier:cardIdentifier]];
+    [self.commandDelegate sendPluginResult:pluginResult callbackId:command.callbackId];
+}
+
+// Plugin Method - checkCardEligibilityBySuffix
+- (void) checkCardEligibilityBySuffix:(CDVInvokedUrlCommand*)command {
+    NSString * cardSuffix = [command.arguments objectAtIndex:0];
+    Boolean cardEligible = true;
+    Boolean cardAddedtoPasses = false;
+    Boolean cardAddedtoRemotePasses = false;
+    
+    PKPassLibrary *passLibrary = [[PKPassLibrary alloc] init];
+    NSArray<PKPass *> *paymentPasses = [passLibrary passesOfType:PKPassTypePayment];
+    for (PKPass *pass in paymentPasses) {
+        PKPaymentPass * paymentPass = [pass paymentPass];
+        if([paymentPass primaryAccountNumberSuffix] == cardSuffix)
+            cardAddedtoPasses = true;
+    }
+    
+    if (WCSession.isSupported) { // check if the device support to handle an Apple Watch
+        WCSession *session = [WCSession defaultSession];
+        [session setDelegate:self.appDelegate];
+        [session activateSession];
+        
+        if ([session isPaired]) { // Check if the iPhone is paired with the Apple Watch
+            paymentPasses = [passLibrary remotePaymentPasses];
+            for (PKPass *pass in paymentPasses) {
+                PKPaymentPass * paymentPass = [pass paymentPass];
+                if([paymentPass primaryAccountNumberSuffix] == cardSuffix)
+                    cardAddedtoRemotePasses = true;
+            }
+        }
+        else
+            cardAddedtoRemotePasses = true;
+    }
+    else
+        cardAddedtoRemotePasses = true;
+    
+    cardEligible = !cardAddedtoPasses || !cardAddedtoRemotePasses;
+    
+    CDVPluginResult *pluginResult;
+    pluginResult = [CDVPluginResult resultWithStatus:CDVCommandStatus_OK messageAsBool:cardEligible];
     [self.commandDelegate sendPluginResult:pluginResult callbackId:command.callbackId];
 }
 
@@ -68,7 +116,8 @@
     [addPaymentPassRequestConfiguration setCardholderName:cardholderName];
     [addPaymentPassRequestConfiguration setPrimaryAccountSuffix:primaryAccountNumberSuffix];
     [addPaymentPassRequestConfiguration setLocalizedDescription:localizedDescription];
-    [addPaymentPassRequestConfiguration setPrimaryAccountIdentifier:primaryAccountIdentifier];
+    if(![primaryAccountIdentifier isEqualToString:@""])
+        [addPaymentPassRequestConfiguration setPrimaryAccountIdentifier:primaryAccountIdentifier];
     [addPaymentPassRequestConfiguration setPaymentNetwork:paymentNetwork];
     
     PKAddPaymentPassViewController * paymentPassViewController = [PKAddPaymentPassViewController alloc];
