@@ -19,25 +19,91 @@
 // Plugin Method - checkCardEligibility
 - (void) checkCardEligibility:(CDVInvokedUrlCommand*)command {
     NSString * cardIdentifier = [command.arguments objectAtIndex:0];
-    Boolean cardExist = false;
+    Boolean cardEligible = true;
+    Boolean cardAddedtoPasses = false;
+    Boolean cardAddedtoRemotePasses = false;
     
     PKPassLibrary *passLibrary = [[PKPassLibrary alloc] init];
     NSArray<PKPass *> *paymentPasses = [passLibrary passesOfType:PKPassTypePayment];
     for (PKPass *pass in paymentPasses) {
          PKPaymentPass * paymentPass = [pass paymentPass];
         if([paymentPass primaryAccountIdentifier] == cardIdentifier)
-            cardExist = true;
+            cardAddedtoPasses = true;
     }
     
+    if (WCSession.isSupported) { // check if the device support to handle an Apple Watch
+        WCSession *session = [WCSession defaultSession];
+        [session setDelegate:self.appDelegate];
+        [session activateSession];
+        
+        if ([session isPaired]) { // Check if the iPhone is paired with the Apple Watch
+            paymentPasses = [passLibrary remotePaymentPasses];
+            for (PKPass *pass in paymentPasses) {
+                PKPaymentPass * paymentPass = [pass paymentPass];
+                if([paymentPass primaryAccountIdentifier] == cardIdentifier)
+                    cardAddedtoRemotePasses = true;
+            }
+        }
+        else
+            cardAddedtoRemotePasses = true;
+    }
+    else
+        cardAddedtoRemotePasses = true;
+
+    cardEligible = !cardAddedtoPasses || !cardAddedtoRemotePasses;
+    
     CDVPluginResult *pluginResult;
-    pluginResult = [CDVPluginResult resultWithStatus:CDVCommandStatus_OK messageAsBool:cardExist];
+    pluginResult = [CDVPluginResult resultWithStatus:CDVCommandStatus_OK messageAsBool:cardEligible];
     //pluginResult = [CDVPluginResult resultWithStatus:CDVCommandStatus_OK messageAsBool:[passLibrary canAddPaymentPassWithPrimaryAccountIdentifier:cardIdentifier]];
+    [self.commandDelegate sendPluginResult:pluginResult callbackId:command.callbackId];
+}
+
+// Plugin Method - checkCardEligibilityBySuffix
+- (void) checkCardEligibilityBySuffix:(CDVInvokedUrlCommand*)command {
+    NSString * cardSuffix = [command.arguments objectAtIndex:0];
+    Boolean cardEligible = true;
+    Boolean cardAddedtoPasses = false;
+    Boolean cardAddedtoRemotePasses = false;
+    
+    PKPassLibrary *passLibrary = [[PKPassLibrary alloc] init];
+    NSArray<PKPass *> *paymentPasses = [passLibrary passesOfType:PKPassTypePayment];
+    for (PKPass *pass in paymentPasses) {
+        PKPaymentPass * paymentPass = [pass paymentPass];
+        if([paymentPass primaryAccountNumberSuffix] == cardSuffix)
+            cardAddedtoPasses = true;
+    }
+    
+    if (WCSession.isSupported) { // check if the device support to handle an Apple Watch
+        WCSession *session = [WCSession defaultSession];
+        [session setDelegate:self.appDelegate];
+        [session activateSession];
+        
+        if ([session isPaired]) { // Check if the iPhone is paired with the Apple Watch
+            paymentPasses = [passLibrary remotePaymentPasses];
+            for (PKPass *pass in paymentPasses) {
+                PKPaymentPass * paymentPass = [pass paymentPass];
+                if([paymentPass primaryAccountNumberSuffix] == cardSuffix)
+                    cardAddedtoRemotePasses = true;
+            }
+        }
+        else
+            cardAddedtoRemotePasses = true;
+    }
+    else
+        cardAddedtoRemotePasses = true;
+    
+    cardEligible = !cardAddedtoPasses || !cardAddedtoRemotePasses;
+    
+    CDVPluginResult *pluginResult;
+    pluginResult = [CDVPluginResult resultWithStatus:CDVCommandStatus_OK messageAsBool:cardEligible];
     [self.commandDelegate sendPluginResult:pluginResult callbackId:command.callbackId];
 }
 
 // Plugin Method - addCardToWallet
 - (void) addCardToWallet:(CDVInvokedUrlCommand*)command {
-    CDVPluginResult *pluginResult;
+    
+    // cache call back id value till we get response from Apple with Cryptography Info
+    self.cachedCallbackId =  command.callbackId;
     
     NSString * primaryAccountIdentifier = [command.arguments objectAtIndex:0];
     NSString * cardholderName = [command.arguments objectAtIndex:1];
@@ -50,17 +116,14 @@
     [addPaymentPassRequestConfiguration setCardholderName:cardholderName];
     [addPaymentPassRequestConfiguration setPrimaryAccountSuffix:primaryAccountNumberSuffix];
     [addPaymentPassRequestConfiguration setLocalizedDescription:localizedDescription];
-    [addPaymentPassRequestConfiguration setPrimaryAccountIdentifier:primaryAccountIdentifier];
+    if(![primaryAccountIdentifier isEqualToString:@""])
+        [addPaymentPassRequestConfiguration setPrimaryAccountIdentifier:primaryAccountIdentifier];
     [addPaymentPassRequestConfiguration setPaymentNetwork:paymentNetwork];
     
     PKAddPaymentPassViewController * paymentPassViewController = [PKAddPaymentPassViewController alloc];
     paymentPassViewController = [paymentPassViewController initWithRequestConfiguration:addPaymentPassRequestConfiguration delegate:self];
     [self.viewController presentViewController:paymentPassViewController animated:true completion:nil];
     
-    // cache call back id value till we get response from Apple with Cryptography Info
-    self.cachedCallbackId =  command.callbackId;
-    //pluginResult = [CDVPluginResult resultWithStatus:CDVCommandStatus_OK messageAsBool:true];
-    //[self.commandDelegate sendPluginResult:pluginResult callbackId:command.callbackId];
 }
 
 // PKAddPaymentPassViewControllerDelegate implmentation
@@ -71,13 +134,14 @@
                    completionHandler:(void (^)(PKAddPaymentPassRequest *request))handler{
     
     // Call Backend service send to it certificates, nonce, nonceSignature
-    NSArray *cryptographyInfo = @[certificates, nonce, nonceSignature];
+    NSMutableArray *cryptographyInfo = [[NSMutableArray alloc] init];
+    [cryptographyInfo addObject:nonce];
+    [cryptographyInfo addObject:nonceSignature];
     
-    /*NSString *seperator = @",";
-    NSMutableData *completeData = [nonce mutableCopy];
-    [completeData appendData:[seperator dataUsingEncoding:NSUTF8StringEncoding]];
-    [completeData appendData:nonceSignature];
-    [completeData appendData:[seperator dataUsingEncoding:NSUTF8StringEncoding]];*/
+    for (NSData* certificate in certificates)
+    {
+        [cryptographyInfo addObject:certificate];
+    }
 
     self.addPaymentRequestCallback = handler;
     
@@ -91,15 +155,10 @@
 // Plugin Method - addCardToWallet
 - (void) sendPassRequestData:(CDVInvokedUrlCommand*)command {
     
-    NSData * encryptedPassData = [command.arguments objectAtIndex:0];
-    // NSData * encryptedPassData = [[command.arguments objectAtIndex:0] dataUsingEncoding:ns64];
     //NSData * encryptedPassData = [[NSData alloc] initWithBase64EncodedString:[command.arguments objectAtIndex:0] options:0];
-    
-    NSData * activationData = [command.arguments objectAtIndex:1];
-    //NSData * activationData = [[command.arguments objectAtIndex:1] dataUsingEncoding:NSUTF8StringEncoding];
-    
-    NSData * wrappedKey = [command.arguments objectAtIndex:2];
-    //NSData * wrappedKey = [[command.arguments objectAtIndex:2] dataUsingEncoding:NSUTF8StringEncoding];
+    NSData * encryptedPassData = [[command.arguments objectAtIndex:0] dataUsingEncoding:NSUTF8StringEncoding];
+    NSData * activationData = [[command.arguments objectAtIndex:1] dataUsingEncoding:NSUTF8StringEncoding];
+    NSData * wrappedKey = [[command.arguments objectAtIndex:2] dataUsingEncoding:NSUTF8StringEncoding];
     
     PKAddPaymentPassRequest * addPaymentPassRequest = [[PKAddPaymentPassRequest alloc] init];
     [addPaymentPassRequest setEncryptedPassData:encryptedPassData];
@@ -119,7 +178,7 @@
     
     CDVPluginResult *pluginResult;
     if(pass == nil)
-        pluginResult = [CDVPluginResult resultWithStatus:CDVCommandStatus_OK messageAsBool:false];
+        pluginResult = [CDVPluginResult resultWithStatus:CDVCommandStatus_ERROR messageAsBool:false];
     else
         pluginResult = [CDVPluginResult resultWithStatus:CDVCommandStatus_OK messageAsBool:true];
 

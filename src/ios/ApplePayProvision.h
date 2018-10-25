@@ -6,6 +6,7 @@
 #import "Foundation/Foundation.h"
 #import "Cordova/CDV.h"
 #import <PassKit/PassKit.h>
+#import <WatchConnectivity/WatchConnectivity.h>
 
 typedef void (^ AddPaymentRequestCallbackType)(PKAddPaymentPassRequest *request);
 
@@ -13,6 +14,7 @@ typedef void (^ AddPaymentRequestCallbackType)(PKAddPaymentPassRequest *request)
 
 - (void) checkDeviceEligibility:(CDVInvokedUrlCommand*)command;
 - (void) checkCardEligibility:(CDVInvokedUrlCommand*)command;
+- (void) checkCardEligibilityBySuffix:(CDVInvokedUrlCommand*)command;
 - (void) addCardToWallet:(CDVInvokedUrlCommand*)command;
 - (void) sendPassRequestData:(CDVInvokedUrlCommand*)command;
 

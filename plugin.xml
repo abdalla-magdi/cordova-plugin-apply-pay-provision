@@ -26,6 +26,7 @@
         <header-file src="src/ios/ApplePayProvision.h" />
         <source-file src="src/ios/ApplePayProvision.m" />
         <framework src="PassKit.framework" />
+        <framework src="WatchConnectivity.framework" />
     </platform>
 
 </plugin>
