@@ -106,7 +106,7 @@ ApplePayProvision.checkCardEligibility(cardSuffix, isCardEligibleCallback, error
 -----------------------------------------------------
 #### addCardToWallet(primaryAccountIdentifier, cardholderName, primaryAccountNumberSuffix, localizedDescription, paymentNetwork, callback)
 
-Send Request to device Wallet to add this card to Apple Pay payment system and get Cryptography Info form Apple, the callback for this function will be called when nonce and certificates retrived from Apple.
+Send Request to device Wallet to add this card to Apple Pay payment system and get Cryptography Info form Apple, the callback for this function will be called when nonce, nonceSignature and certificates retrived from Apple.
 
 ##### Parameters
 - __primaryAccountIdentifier__ (String) Your card unique identifier that used in card in-app provisioning, can be sent as empty value if this info is not available
@@ -114,21 +114,14 @@ Send Request to device Wallet to add this card to Apple Pay payment system and g
 - __primaryAccountNumberSuffix__ (String) The last four or five digits of the PAN. Presented to the user with dots prepended to indicate that it is a suffix, This must not be the entire PAN
 - __localizedDescription__ (String) A short description of the card
 - __paymentNetwork__ (String) Filters the networks shown in the introduction view to this single network
-- __callback__ (Function) A callback method to receive the array result of Cryptography Info asynchronously from the native plugin, the cryptographyInfo is an contains following three values: nonce, nonceSignature and certificates array, those values return from the plugin as Array Buffers
+- __callback__ (Function) A callback method to receive the array result of Cryptography Info asynchronously from the native plugin, the cryptographyInfo is an contains following three values: nonce, nonceSignature and certificates array
 
 ##### Usage
 
 ```javascript
 function addCardToWalletCallback(nonce, nonceSignature, ...certificates) {
-
-    var nonceString = String.fromCharCode.apply(null, new Uint8Array(nonce));
-    var nonceSignatureString = String.fromCharCode.apply(null, new Uint8Array(nonceSignature));
-    var certificatesArray = [];
-    for(var i=0 ; i < certificates.length; i++){
-        certificatesArray.push(String.fromCharCode.apply(null, new Uint8Array(certificates[i])));
-    }
-    
-    // Send those values to your Issuer server to preprate the pass data requested in method sendPassRequestData
+    console.log("Got card cryptographyInfo successfully from Wallet");
+    // Send those values (nonce, nonceSignature, certificates[] to your Issuer server to preprate the pass data requested in method sendPassRequestData
 
 }
 

@@ -133,32 +133,35 @@
                       nonceSignature:(NSData *)nonceSignature
                    completionHandler:(void (^)(PKAddPaymentPassRequest *request))handler{
     
-    // Call Backend service send to it certificates, nonce, nonceSignature
+    NSString* nonceString = [nonce base64EncodedStringWithOptions:NSDataBase64EncodingEndLineWithCarriageReturn];
+    NSString* nonceSignatureString = [nonceSignature base64EncodedStringWithOptions:NSDataBase64EncodingEndLineWithCarriageReturn];
+
     NSMutableArray *cryptographyInfo = [[NSMutableArray alloc] init];
-    [cryptographyInfo addObject:nonce];
-    [cryptographyInfo addObject:nonceSignature];
+    [cryptographyInfo addObject:nonceString];
+    [cryptographyInfo addObject:nonceSignatureString];
     
     for (NSData* certificate in certificates)
     {
-        [cryptographyInfo addObject:certificate];
+        [cryptographyInfo addObject:[certificate base64EncodedStringWithOptions:NSDataBase64EncodingEndLineWithCarriageReturn]];
     }
 
     self.addPaymentRequestCallback = handler;
     
     CDVPluginResult *pluginResult;
     pluginResult = [CDVPluginResult resultWithStatus:CDVCommandStatus_OK messageAsMultipart:cryptographyInfo];
+    
     [self.commandDelegate sendPluginResult:pluginResult callbackId:self.cachedCallbackId];
-    // Backedend service should response with encrypted data object, activation OTP and Wrappedkey to be set in PKAddPaymentPassRequest object
+    // Call Backend service send to it certificates, nonce, nonceSignature
+    // Backedend service should response with encrypted data object, activation OTP and Wrappedkey and call sendPassRequestData to create PKAddPaymentPassRequest object
 
 }
 
 // Plugin Method - addCardToWallet
 - (void) sendPassRequestData:(CDVInvokedUrlCommand*)command {
     
-    //NSData * encryptedPassData = [[NSData alloc] initWithBase64EncodedString:[command.arguments objectAtIndex:0] options:0];
-    NSData * encryptedPassData = [[command.arguments objectAtIndex:0] dataUsingEncoding:NSUTF8StringEncoding];
-    NSData * activationData = [[command.arguments objectAtIndex:1] dataUsingEncoding:NSUTF8StringEncoding];
-    NSData * wrappedKey = [[command.arguments objectAtIndex:2] dataUsingEncoding:NSUTF8StringEncoding];
+    NSData * encryptedPassData = [[NSData alloc] initWithBase64EncodedString:[command.arguments objectAtIndex:0] options:0];
+    NSData * activationData = [[NSData alloc] initWithBase64EncodedString:[command.arguments objectAtIndex:1] options:0];
+    NSData * wrappedKey = [[NSData alloc] initWithBase64EncodedString:[command.arguments objectAtIndex:2] options:0];
     
     PKAddPaymentPassRequest * addPaymentPassRequest = [[PKAddPaymentPassRequest alloc] init];
     [addPaymentPassRequest setEncryptedPassData:encryptedPassData];
