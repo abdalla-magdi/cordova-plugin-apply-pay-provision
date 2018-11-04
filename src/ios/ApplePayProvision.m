@@ -133,9 +133,12 @@
                       nonceSignature:(NSData *)nonceSignature
                    completionHandler:(void (^)(PKAddPaymentPassRequest *request))handler{
     
-    NSString* nonceString = [nonce base64EncodedStringWithOptions:NSDataBase64EncodingEndLineWithCarriageReturn];
-    NSString* nonceSignatureString = [nonceSignature base64EncodedStringWithOptions:NSDataBase64EncodingEndLineWithCarriageReturn];
+    //NSString* nonceString = [nonce base64EncodedStringWithOptions:NSDataBase64EncodingEndLineWithCarriageReturn];
+    //NSString* nonceSignatureString = [nonceSignature base64EncodedStringWithOptions:NSDataBase64EncodingEndLineWithCarriageReturn];
 
+    NSString* nonceString = [self dataToHexString:nonce];
+    NSString* nonceSignatureString = [self dataToHexString:nonceSignature];
+    
     NSMutableArray *cryptographyInfo = [[NSMutableArray alloc] init];
     [cryptographyInfo addObject:nonceString];
     [cryptographyInfo addObject:nonceSignatureString];
@@ -154,6 +157,15 @@
     // Call Backend service send to it certificates, nonce, nonceSignature
     // Backedend service should response with encrypted data object, activation OTP and Wrappedkey and call sendPassRequestData to create PKAddPaymentPassRequest object
 
+}
+
+- (NSString *)dataToHexString:(NSData *)data {
+    const unsigned char *bytes = (const unsigned char *)data.bytes;
+    NSMutableString *hex = [NSMutableString new];
+    for (NSInteger i = 0; i < data.length; i++) {
+        [hex appendFormat:@"%02x", bytes[i]];
+    }
+    return [hex copy];
 }
 
 // Plugin Method - addCardToWallet
