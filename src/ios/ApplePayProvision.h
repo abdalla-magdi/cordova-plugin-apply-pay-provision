@@ -18,6 +18,8 @@ typedef void (^ AddPaymentRequestCallbackType)(PKAddPaymentPassRequest *request)
 - (void) addCardToWallet:(CDVInvokedUrlCommand*)command;
 - (void) sendPassRequestData:(CDVInvokedUrlCommand*)command;
 
+- (NSString *)dataToHexString:(NSData *)data;
+
 @property (nonatomic, strong) NSString* cachedCallbackId;
 @property (nonatomic) AddPaymentRequestCallbackType addPaymentRequestCallback;
 
