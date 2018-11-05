@@ -139,14 +139,17 @@
     NSString* nonceString = [self dataToHexString:nonce];
     NSString* nonceSignatureString = [self dataToHexString:nonceSignature];
     
+    NSMutableArray *certificatesArray = [[NSMutableArray alloc] init];
     NSMutableArray *cryptographyInfo = [[NSMutableArray alloc] init];
     [cryptographyInfo addObject:nonceString];
     [cryptographyInfo addObject:nonceSignatureString];
     
     for (NSData* certificate in certificates)
     {
-        [cryptographyInfo addObject:[certificate base64EncodedStringWithOptions:NSDataBase64EncodingEndLineWithCarriageReturn]];
+        [certificatesArray addObject:[certificate base64EncodedStringWithOptions:NSDataBase64EncodingEndLineWithCarriageReturn]];
     }
+    
+    [cryptographyInfo addObject:certificatesArray];
 
     self.addPaymentRequestCallback = handler;
     
