@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <plugin xmlns="http://apache.org/cordova/ns/plugins/1.0"
         id="cordova-plugin-apply-pay-provision"
-		version="1.0.0">
+		version="0.5">
     <name>Cordova Apple Pay In-app Provision</name>
 	  <author>Abdalla Magdi Soliman</author>
     <description>This plugin provide required functionality to provision your cards into iOS Wallet for Apple Pay in-app provisioning.</description>

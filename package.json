@@ -1,6 +1,6 @@
 {
   "name": "cordova-plugin-apply-pay-provision",
-  "version": "1.0.0",
+  "version": "0.5",
   "description": "This plugin provide required functionality to provision your cards into iOS Wallet for Apple Pay in-app provisioning.",
   "cordova": {
     "id": "cordova-plugin-apply-pay-provision",
