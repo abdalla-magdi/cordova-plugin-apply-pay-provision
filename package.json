@@ -21,12 +21,12 @@
     "ecosystem:cordova",
     "cordova-ios"
   ],
-  "engines": [
+  "engines": 
     {
       "name": "cordova",
       "version": ">=3.0.0"
     }
-  ],
+  ,
   "author": "Abdalla Soliman",
   "license": "Apache-2.0",
   "bugs": {
